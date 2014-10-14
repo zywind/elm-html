@@ -26,6 +26,23 @@ Elm.Native.Html.make = function(elm) {
     var Maybe = Elm.Maybe.make(elm);
     var eq = Elm.Native.Utils.make(elm).eq;
 
+    function createNode(tag, attrs, children) {
+        var key, namespace
+        // support keys
+        if ("key" in attrs) {
+            key = attrs.key
+            attrs.key = undefined
+        }
+
+        // support namespace
+        if ("namespace" in attrs) {
+            namespace = attrs.namespace
+            attrs.namespace = undefined
+        }
+
+        return new VNode(tag, attrs, children, key, namespace);
+    }
+
     function listToObject(list) {
         var object = {};
         while (list.ctor !== '[]') {
@@ -38,7 +55,7 @@ Elm.Native.Html.make = function(elm) {
 
     function node(name, attributes, contents) {
         var attrs = listToObject(attributes);
-
+        
         // ensure that setting text of an input does not move the cursor
         var useSoftSet =
             name === 'input'
@@ -50,7 +67,44 @@ Elm.Native.Html.make = function(elm) {
             attrs.value = SoftSetHook(attrs.value);
         }
 
-        return new VNode(name, attrs, List.toArray(contents));
+        return new createNode(name, attrs, List.toArray(contents));
+    }
+
+    var NORMAL_ATTRS_FOR_SVG = {
+        "style": true,
+        "namespace": true,
+        "key": true
+    }
+
+    var SVG_NAMESPACE = "http://www.w3.org/2000/svg"
+
+    function svg(name, attributes, contents) {
+        var attrs = listToObject(attributes);
+
+        attrs.namespace = SVG_NAMESPACE;
+
+        for (var key in attrs) {
+            if (!attrs.hasOwnProperty(key)) { 
+                continue;
+            }
+
+            if (NORMAL_ATTRS_FOR_SVG[key]) {
+                continue;
+            }
+
+            // Is this needed for elm?
+            // var value = attrs[key]
+            // if (typeof value !== "string" &&
+            //     typeof value !== "number" &&
+            //     typeof value !== "boolean"
+            // ) {
+            //     continue;
+            // }
+
+            attrs[key] = AttributeHook(attrs[key])
+        }
+
+        return new createNode(name, attrs, List.toArray(contents));
     }
 
     function pair(key, value) {
@@ -166,6 +220,22 @@ Elm.Native.Html.make = function(elm) {
         node[propertyName] = this.value;
       }
     };
+
+    function AttributeHook(value) {
+        if (!(this instanceof AttributeHook)) {
+            return new AttributeHook(value);
+        }
+
+        this.value = value;
+    }
+
+    AttributeHook.prototype.hook = function (node, prop, prev) {
+        if (prev && prev.value === this.value) {
+            return;
+        }
+
+        node.setAttributeNS(null, prop, this.value)
+    }
 
     function text(string) {
         return new VText(string);
@@ -309,6 +379,7 @@ Elm.Native.Html.make = function(elm) {
 
     return Elm.Native.Html.values = {
         node: F3(node),
+        svg: F3(svg),
         text: text,
         style: style,
         on: F2(on),

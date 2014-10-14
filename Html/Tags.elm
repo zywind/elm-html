@@ -18,7 +18,7 @@ topic of the section it introduces.
 @docs ol, ul, li, dl, dt, dd
 
 # Emdedded Content
-@docs img, iframe, canvas, svg, math
+@docs img, iframe, canvas, math
 
 # Inputs
 @docs form, input, textarea, button, select, option
@@ -422,10 +422,6 @@ map = node "map"
 area : [Attribute] -> [Html] -> Html
 area = node "area"
 --}
-
-{-| Defines an embedded vectorial image. -}
-svg : [Attribute] -> [Html] -> Html
-svg = node "svg"
 
 {-| Defines a mathematical formula. -}
 math : [Attribute] -> [Html] -> Html

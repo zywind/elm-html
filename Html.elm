@@ -50,6 +50,19 @@ a list of child nodes.
 node : String -> [Attribute] -> [Html] -> Html
 node = Native.Html.node
 
+{-| Defines an embedded vectorial image.
+      svg "svg"
+        [ attr "height" "100"
+        , attr "width" "100"
+        ] 
+        [svg "circle"
+          [ attr "cx" "50"
+          , attr "cy" "50"
+          , attr "r" "25"] []]
+-}
+svg : String -> [Attribute] -> [Html] -> Html
+svg = Native.Html.svg
+
 {-| Just put plain text in the DOM. It will escape the string so that it appears
 exactly as you specify.
 
